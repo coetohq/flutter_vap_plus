@@ -120,11 +120,7 @@
 //     self = [super init];
 //     if (self) {
 //         playStatus = NO;
-//         _view = [[VapContainerView alloc] initWithFrame:frame];
-        __weak typeof(self) weakSelfForLayout = self;
-        _view.onLayoutChanged = ^{
-            [weakSelfForLayout startPendingPlaybackIfReady];
-        };
+//         _view = [[UIView alloc] initWithFrame:frame];
 
 //         // Initialize MethodChannel
 //         NSString *methodChannelName = [NSString stringWithFormat:@"flutter_vap_controller_%lld", viewId];
