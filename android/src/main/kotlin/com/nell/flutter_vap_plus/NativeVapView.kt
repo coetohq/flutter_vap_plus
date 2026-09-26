@@ -41,11 +41,6 @@ internal class NativeVapView(
 
     init {
         channel.setMethodCallHandler(this)
-    }
-
-    override fun onFlutterViewAttached(flutterView: View) {
-        super.onFlutterViewAttached(flutterView)
-
         vapView.setScaleType(
             ScaleType.valueOf(
                 (creationParams?.get("scaleType") ?: "FIT_CENTER").toString()

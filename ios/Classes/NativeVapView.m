@@ -13,6 +13,24 @@
 
 @end
 
+@interface VapContainerView : UIView
+@property (nonatomic, copy, nullable) void (^onLayoutChanged)(void);
+@end
+
+@implementation VapContainerView
+
+- (void)didMoveToWindow {
+    [super didMoveToWindow];
+    if (self.onLayoutChanged) self.onLayoutChanged();
+}
+
+- (void)layoutSubviews {
+    [super layoutSubviews];
+    if (self.onLayoutChanged) self.onLayoutChanged();
+}
+
+@end
+
 @implementation NativeVapViewFactory {
     NSObject<FlutterPluginRegistrar> *_registrar;
 }
@@ -37,7 +55,8 @@
 @end
 
 @implementation NativeVapView {
-    UIView *_view;
+    VapContainerView *_view;
+    NSString *_pendingPath;
     QGVAPWrapView *_wrapView;
     BOOL playStatus;
     FlutterMethodChannel *_methodChannel;
@@ -52,7 +71,11 @@
     _args = args;
     if (self) {
         playStatus = NO;
-        _view = [[UIView alloc] initWithFrame:frame];
+        _view = [[VapContainerView alloc] initWithFrame:frame];
+        __weak typeof(self) weakSelfForLayout = self;
+        _view.onLayoutChanged = ^{
+            [weakSelfForLayout startPendingPlaybackIfReady];
+        };
         
 
         
@@ -97,7 +120,11 @@
 //     self = [super init];
 //     if (self) {
 //         playStatus = NO;
-//         _view = [[UIView alloc] initWithFrame:frame];
+//         _view = [[VapContainerView alloc] initWithFrame:frame];
+        __weak typeof(self) weakSelfForLayout = self;
+        _view.onLayoutChanged = ^{
+            [weakSelfForLayout startPendingPlaybackIfReady];
+        };
 
 //         // Initialize MethodChannel
 //         NSString *methodChannelName = [NSString stringWithFormat:@"flutter_vap_controller_%lld", viewId];
@@ -184,23 +211,30 @@
     }
 
     playStatus = YES;
+    _pendingPath = path;
+    result(nil);
+    [self startPendingPlaybackIfReady];
+}
+
+// Flutter creates the view with CGRectZero and QGVAPWrapView sizes itself from its bounds only once at start
+- (void)startPendingPlaybackIfReady {
+    if (!_pendingPath || !_view.window || CGRectIsEmpty(_view.bounds)) {
+        return;
+    }
+    NSString *path = _pendingPath;
+    _pendingPath = nil;
+
     _wrapView = [[QGVAPWrapView alloc] initWithFrame:_view.bounds];
-    
-    _wrapView.center = _view.center;
+    _wrapView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
     _wrapView.contentMode = QGVAPWrapViewContentModeAspectFit;
     _wrapView.autoDestoryAfterFinish = YES;
-    
+
     [_view addSubview:_wrapView];
     [_wrapView vapWrapView_playHWDMP4:path repeatCount:0 delegate:self];
-//    [_wrapView playHWDMp4:path repeatCount:0 delegate:self];
-
-//    [_wrapView playHWDMP4:path repeatCount:0 delegate:self];
-    // Optionally, you can notify Flutter that playback has started
-    result(nil);
-    [_methodChannel invokeMethod:@"onStart" arguments:@{@"status" : @"start"}];
 }
 
 - (void)stopPlayback {
+    _pendingPath = nil;
     if (_wrapView) {
         [_wrapView removeFromSuperview];
         _wrapView = nil;
