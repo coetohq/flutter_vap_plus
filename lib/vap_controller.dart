@@ -21,22 +21,14 @@ class VapController {
   Future<void> play(
       {required String source, required String playMethod, required String playArg, List<
           FetchResourceModel> fetchResources = const []}) async {
-    try {
-      playCompleter = Completer<void>();
-      /// 先设置融合动画参数再播放，不然会出现融合动画不起作用的问题
-      await setFetchResources(fetchResources);
+    final completer = Completer<void>();
+    playCompleter = completer;
+    /// 先设置融合动画参数再播放，不然会出现融合动画不起作用的问题
+    await setFetchResources(fetchResources);
 
-      await _methodChannel.invokeMethod(playMethod, {playArg: source});
+    await _methodChannel.invokeMethod(playMethod, {playArg: source});
 
-      return playCompleter!.future.timeout(const Duration(seconds: 20),
-          onTimeout: () {
-            if (playCompleter?.isCompleted == true) return;
-            playCompleter?.completeError(
-                TimeoutException("wait play complete timeout"));
-          });
-    } catch (e, s) {
-      playCompleter?.completeError(e, s);
-    }
+    return completer.future.timeout(const Duration(seconds: 20));
   }
 
   Future<void> playPath(String path,
@@ -55,8 +47,9 @@ class VapController {
         fetchResources: fetchResources);
   }
 
-  stop() {
-    _methodChannel.invokeMethod('stop');
+  Future<void> stop() async {
+    await _methodChannel.invokeMethod('stop');
+    _completePlay(error: StateError('playback stopped'));
   }
 
   Future setFetchResources(List<FetchResourceModel> resources) {
@@ -73,11 +66,21 @@ class VapController {
     onEvent?.call(call.method, call.arguments);
     switch (call.method) {
       case "onComplete":
-        playCompleter?.complete();
+        _completePlay();
         break;
       case "onFailed":
-        playCompleter?.completeError(call.arguments);
+        _completePlay(error: call.arguments);
         break;
+    }
+  }
+
+  void _completePlay({Object? error}) {
+    final completer = playCompleter;
+    if (completer == null || completer.isCompleted) return;
+    if (error == null) {
+      completer.complete();
+    } else {
+      completer.completeError(error);
     }
   }
 }
