@@ -24,8 +24,7 @@ class VapViewForIos extends StatelessWidget {
       layoutDirection: TextDirection.ltr,
       creationParams: creationParams,
       creationParamsCodec: StandardMessageCodec(),
-      onPlatformViewCreated: (viewId) async{
-        await Future.delayed(const Duration(milliseconds: 1000));
+      onPlatformViewCreated: (viewId) {
         onControllerCreated(VapController(
           viewId: viewId,
           onEvent: onEvent,
