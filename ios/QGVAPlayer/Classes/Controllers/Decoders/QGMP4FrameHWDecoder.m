@@ -391,13 +391,13 @@ NSString *const QGMP4HWDErrorDomain = @"QGMP4HWDErrorDomain";
     }
     
     // 3. create VTDecompressionSession
-    CFDictionaryRef attrs = NULL;
-    const void *keys[] = {kCVPixelBufferPixelFormatTypeKey};
     //      kCVPixelFormatType_420YpCbCr8Planar is YUV420
     //      kCVPixelFormatType_420YpCbCr8BiPlanarFullRange is NV12
-    uint32_t v = kCVPixelFormatType_420YpCbCr8BiPlanarFullRange;
-    const void *values[] = { CFNumberCreate(NULL, kCFNumberSInt32Type, &v) };
-    attrs = CFDictionaryCreate(NULL, keys, values, 1, NULL, NULL);
+    CFDictionaryRef attrs = (__bridge_retained CFDictionaryRef)@{
+        (__bridge NSString *)kCVPixelBufferPixelFormatTypeKey: @(kCVPixelFormatType_420YpCbCr8BiPlanarFullRange),
+        (__bridge NSString *)kCVPixelBufferIOSurfacePropertiesKey: @{},
+        (__bridge NSString *)kCVPixelBufferMetalCompatibilityKey: @YES,
+    };
     
     if ([UIDevice currentDevice].systemVersion.floatValue >= 9.0) {
         _status = VTDecompressionSessionCreate(kCFAllocatorDefault,

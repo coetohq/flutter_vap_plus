@@ -18,19 +18,6 @@
 #import <Metal/Metal.h>
 #import "VAPMacros.h"
 
-#if TARGET_OS_SIMULATOR//模拟器
-
-@interface QGVAPMetalRenderer : NSObject
-
-@property (nonatomic, strong) QGVAPCommonInfo *commonInfo;
-
-- (instancetype)initWithMetalLayer:(id)layer;
-- (void)renderPixelBuffer:(CVPixelBufferRef)pixelBuffer metalLayer:(id)layer mergeInfos:(NSArray<QGVAPMergedInfo *> *)infos;
-- (void)dispose;
-
-@end
-
-#else
 
 @interface QGVAPMetalRenderer : NSObject
 
@@ -45,4 +32,3 @@
 
 @end
 
-#endif

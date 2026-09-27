@@ -97,8 +97,6 @@ static const float kQuadVerticesConstants[kQuadVerticesConstantsRow][kQuadVertic
      1.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0, 0.5}
 };
 
-#if TARGET_OS_SIMULATOR//模拟器
-#else
 
 @interface QGHWDMetalRenderer () {
     BOOL _renderingResourcesDisposed;      //用以标记渲染资源是否被回收
@@ -318,4 +316,3 @@ static const float kQuadVerticesConstants[kQuadVerticesConstantsRow][kQuadVertic
 }
 
 @end
-#endif
